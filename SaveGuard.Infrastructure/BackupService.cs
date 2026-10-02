@@ -129,6 +129,42 @@ public sealed class BackupService : IBackupService
         return snapshots;
     }
 
+    public async Task DeleteSnapshotAsync(BackupTarget target, Snapshot snapshot, CancellationToken cancellationToken = default)
+    {
+        var gate = _locks.GetOrAdd(target.Id, _ => new SemaphoreSlim(1, 1));
+        await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            _logger.Info($"Deleting snapshot for '{target.DisplayName}' ({target.Id}): '{snapshot.Path}'.");
+            _snapshotService.DeleteSnapshot(snapshot);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Failed to delete snapshot '{snapshot.Path}' for '{target.DisplayName}'.", ex);
+            throw;
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
+    public StorageUsage GetStorageUsage(BackupTarget target)
+    {
+        return new StorageUsage(
+            BackupBytes: SumSizes(target, SnapshotKind.Backup),
+            ManualBytes: SumSizes(target, SnapshotKind.Manual),
+            SafetyBytes: SumSizes(target, SnapshotKind.Safety));
+    }
+
+    private long SumSizes(BackupTarget target, SnapshotKind kind)
+    {
+        long total = 0;
+        foreach (var snapshot in _snapshotService.GetSnapshots(target.Id, target.BackupPath, kind))
+            total += snapshot.SizeBytes;
+        return total;
+    }
+
     private void ApplyRetention(BackupTarget target, SnapshotKind kind)
     {
         if (target.MaxBackups <= 0)

@@ -2,7 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!--
-        Reusable control styles for GameSaveGuard, built on the semantic brushes in Colors.axaml.
+        Reusable control styles for Save Grave, built on the semantic brushes in Colors.axaml.
         Typography hierarchy and interaction states are centralized here so views stay declarative.
         Button variants: (default) secondary, .primary (accent), .ghost, .danger, .icon (overflow).
     -->
@@ -196,6 +196,16 @@
     <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
         <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
         <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
+    </Style>
+
+    <!-- ToggleSwitch: use the accent for the "on" track instead of the theme default. -->
+    <Style Selector="ToggleSwitch:checked /template/ Border#SwitchKnobBounds">
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    </Style>
+    <Style Selector="ToggleSwitch:checked:pointerover /template/ Border#SwitchKnobBounds">
+        <Setter Property="Background" Value="{DynamicResource AccentHoverBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentHoverBrush}" />
     </Style>
 
     <Style Selector="NumericUpDown">

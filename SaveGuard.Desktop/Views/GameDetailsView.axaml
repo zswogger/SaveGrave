@@ -21,9 +21,29 @@
                 </StackPanel>
                 <TextBlock Grid.Column="2" Classes="meta" Text="{Binding SizeText}"
                            VerticalAlignment="Top" Margin="0,2,14,0" />
-                <Button Grid.Column="3" Content="Restore" VerticalAlignment="Top"
-                        Command="{Binding $parent[ItemsControl].((vm:GameDetailsViewModel)DataContext).RestoreCommand}"
-                        CommandParameter="{Binding}" />
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6" VerticalAlignment="Top">
+                    <Button Content="Restore"
+                            Command="{Binding Owner.RestoreCommand}"
+                            CommandParameter="{Binding}" />
+                    <Button Classes="icon overflow" ToolTip.Tip="More actions">
+                        <PathIcon Width="4" Height="16" Foreground="{DynamicResource SecondaryTextBrush}"
+                                  Data="M2 1 A1.4 1.4 0 1 0 2 3.8 A1.4 1.4 0 1 0 2 1 Z M2 6.6 A1.4 1.4 0 1 0 2 9.4 A1.4 1.4 0 1 0 2 6.6 Z M2 12.2 A1.4 1.4 0 1 0 2 15 A1.4 1.4 0 1 0 2 12.2 Z" />
+                        <Button.Flyout>
+                            <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                <MenuItem Header="Open snapshot folder"
+                                          Command="{Binding Owner.OpenSnapshotFolderCommand}"
+                                          CommandParameter="{Binding}" />
+                                <MenuItem Header="Copy snapshot path"
+                                          Command="{Binding Owner.CopySnapshotPathCommand}"
+                                          CommandParameter="{Binding}" />
+                                <Separator />
+                                <MenuItem Header="Delete snapshot" Classes="danger"
+                                          Command="{Binding Owner.DeleteSnapshotCommand}"
+                                          CommandParameter="{Binding}" />
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+                </StackPanel>
             </Grid>
         </DataTemplate>
     </UserControl.Resources>
@@ -65,28 +85,42 @@
                     </Grid>
 
                     <Border Classes="card" Padding="20,16">
-                        <Grid ColumnDefinitions="1.4*,Auto,Auto,Auto,2*">
-                            <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,24,0">
-                                <TextBlock Classes="meta" Text="Last backup" />
-                                <TextBlock Text="{Binding LastBackupValue}" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="1" Spacing="4" Margin="0,0,28,0">
-                                <TextBlock Classes="meta" Text="Backups" />
-                                <TextBlock Text="{Binding BackupCountValue}" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="2" Spacing="4" Margin="0,0,28,0">
-                                <TextBlock Classes="meta" Text="Manual" />
-                                <TextBlock Text="{Binding ManualCountValue}" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="3" Spacing="4" Margin="0,0,28,0">
-                                <TextBlock Classes="meta" Text="Safety" />
-                                <TextBlock Text="{Binding SafetyCountValue}" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="4" Spacing="4">
-                                <TextBlock Classes="meta" Text="Save folder" />
-                                <TextBlock Text="{Binding SourcePath}" TextTrimming="CharacterEllipsis" />
-                            </StackPanel>
-                        </Grid>
+                        <StackPanel Spacing="16">
+                            <Grid ColumnDefinitions="*,*,*,*">
+                                <StackPanel Grid.Column="0" Spacing="4">
+                                    <TextBlock Classes="meta" Text="Last backup" />
+                                    <TextBlock Text="{Binding LastBackupValue}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Spacing="4">
+                                    <TextBlock Classes="meta" Text="Last checked" />
+                                    <TextBlock Text="{Binding LastCheckedValue}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Spacing="4">
+                                    <TextBlock Classes="meta" Text="Storage used" />
+                                    <TextBlock Text="{Binding StorageUsageValue}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="3" Spacing="4">
+                                    <TextBlock Classes="meta" Text="Save folder" />
+                                    <TextBlock Text="{Binding SourcePath}" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </Grid>
+                            <Border Classes="separator" />
+                            <Grid ColumnDefinitions="*,*,*,*">
+                                <StackPanel Grid.Column="0" Spacing="4">
+                                    <TextBlock Classes="meta" Text="Backups" />
+                                    <TextBlock Text="{Binding BackupCountValue}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Spacing="4">
+                                    <TextBlock Classes="meta" Text="Manual" />
+                                    <TextBlock Text="{Binding ManualCountValue}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Spacing="4">
+                                    <TextBlock Classes="meta" Text="Safety" />
+                                    <TextBlock Text="{Binding SafetyCountValue}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="3" />
+                            </Grid>
+                        </StackPanel>
                     </Border>
                 </StackPanel>
 

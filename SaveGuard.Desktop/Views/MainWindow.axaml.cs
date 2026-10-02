@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Controls;
+using Avalonia.Input.Platform;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
@@ -19,8 +20,11 @@ public partial class MainWindow : Window
         WindowChrome.Apply(this);
         DataContextChanged += OnDataContextChanged;
         Opened += OnOpened;
-        Closed += OnClosed;
     }
+
+    /// <summary>Shows a one-time notice that the app keeps protecting from the tray after close.</summary>
+    public void ShowTrayNotice()
+        => _ = ShowToastAsync("Save Grave is still protecting your saves from the system tray. Use the tray icon to open it or exit.");
 
     private MainViewModel? ViewModel => DataContext as MainViewModel;
 
@@ -30,9 +34,29 @@ public partial class MainWindow : Window
             return;
 
         vm.ShowAddGameDialogAsync = ShowAddGameDialogAsync;
+        vm.ShowSettingsDialogAsync = ShowSettingsDialogAsync;
         vm.ConfirmRemoveAsync = ConfirmRemoveAsync;
         vm.ConfirmRestoreAsync = ConfirmRestoreAsync;
+        vm.ConfirmDeleteAsync = ConfirmDeleteAsync;
+        vm.CopyToClipboardAsync = CopyToClipboardAsync;
         vm.ShowMessageAsync = ShowToastAsync;
+    }
+
+    private Task<bool> ConfirmDeleteAsync(Snapshot snapshot)
+        => ShowConfirmAsync(
+            "Delete this recovery point?",
+            "This permanently removes the selected snapshot from disk. Your current save is not affected.",
+            confirmText: "Delete",
+            danger: true);
+
+    private async Task CopyToClipboardAsync(string text)
+    {
+        var clipboard = Clipboard;
+        if (clipboard is not null)
+        {
+            await clipboard.SetTextAsync(text);
+            await ShowToastAsync("Copied to clipboard.");
+        }
     }
 
     private async void OnOpened(object? sender, System.EventArgs e)
@@ -40,8 +64,6 @@ public partial class MainWindow : Window
         if (ViewModel is { } vm)
             await vm.InitializeAsync();
     }
-
-    private void OnClosed(object? sender, System.EventArgs e) => ViewModel?.Shutdown();
 
     // ===================== Add Game =====================
 
@@ -63,11 +85,34 @@ public partial class MainWindow : Window
         return tcs.Task;
     }
 
+    // ===================== Settings =====================
+
+    private Task ShowSettingsDialogAsync()
+    {
+        if (ViewModel is not { } vm)
+            return Task.CompletedTask;
+
+        var dialog = new SettingsView(new SettingsViewModel(vm));
+        var scrim = ShowModal(dialog);
+        var tcs = new TaskCompletionSource();
+
+        _ = dialog.Completion.ContinueWith(_ =>
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                CloseModal(scrim);
+                tcs.TrySetResult();
+            });
+        }, TaskScheduler.Default);
+
+        return tcs.Task;
+    }
+
     // ===================== Confirmations =====================
 
     private Task<bool> ConfirmRemoveAsync(GameItemViewModel item)
         => ShowConfirmAsync(
-            "Remove from GameSaveGuard?",
+            "Remove from Save Grave?",
             $"\"{item.DisplayName}\" will no longer be protected. Your saves and existing backups are not deleted.",
             confirmText: "Remove",
             danger: true);

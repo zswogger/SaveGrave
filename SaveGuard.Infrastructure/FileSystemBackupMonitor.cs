@@ -35,6 +35,8 @@ public sealed class FileSystemBackupMonitor : IBackupMonitor
 
     public event EventHandler<BackupCompletedEventArgs>? BackupCompleted;
 
+    public event EventHandler<MonitorCheckEventArgs>? CheckCompleted;
+
     public void Start(BackupTarget target)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -105,6 +107,9 @@ public sealed class FileSystemBackupMonitor : IBackupMonitor
             BackupCompleted?.Invoke(this, new BackupCompletedEventArgs { TargetId = target.Id, Error = ex });
         }
     }
+
+    private void RaiseCheckCompleted(Guid targetId)
+        => CheckCompleted?.Invoke(this, new MonitorCheckEventArgs { TargetId = targetId, CheckedAt = DateTimeOffset.UtcNow });
 
     private bool NeedsBackup(BackupTarget target)
     {
@@ -196,6 +201,9 @@ public sealed class FileSystemBackupMonitor : IBackupMonitor
 
         private void OnReconcile(object? state)
         {
+            // Always report the check so the UI can show "last checked", even when no backup is due.
+            _owner.RaiseCheckCompleted(_target.Id);
+
             bool shouldBackup;
             try
             {

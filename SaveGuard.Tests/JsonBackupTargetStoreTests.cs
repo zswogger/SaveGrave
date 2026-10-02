@@ -16,7 +16,7 @@ public class JsonBackupTargetStoreTests
         {
             new()
             {
-                DisplayName = "RuneScape: Dragonwilds",
+                DisplayName = "Display Name",
                 SourcePath = @"C:\saves\rs",
                 BackupPath = @"D:\backups\rs",
                 MaxBackups = 7,
@@ -38,7 +38,7 @@ public class JsonBackupTargetStoreTests
         Assert.Equal(2, loaded.Count);
 
         var first = loaded.Single(t => t.Id == targets[0].Id);
-        Assert.Equal("RuneScape: Dragonwilds", first.DisplayName);
+        Assert.Equal("Display Name", first.DisplayName);
         Assert.Equal(@"C:\saves\rs", first.SourcePath);
         Assert.Equal(@"D:\backups\rs", first.BackupPath);
         Assert.Equal(7, first.MaxBackups);

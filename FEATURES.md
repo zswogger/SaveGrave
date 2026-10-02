@@ -1,6 +1,6 @@
-# GameSaveGuard — Features
+# Save Grave — Features
 
-GameSaveGuard is a cross-platform desktop application that automatically creates versioned
+Save Grave is a cross-platform desktop application that automatically creates versioned
 backups of game save directories so you can restore an earlier save if your current one is
 deleted, corrupted, or otherwise lost.
 
@@ -30,7 +30,7 @@ deleted, corrupted, or otherwise lost.
 - Manual snapshots are stored and pruned separately from automatic backups.
 
 ### Initial baseline snapshot
-- When you add a game, GameSaveGuard captures a snapshot right away, so the game is protected from
+- When you add a game, Save Grave captures a snapshot right away, so the game is protected from
   the moment it's added rather than waiting for the first file change.
 
 ### Snapshot format
@@ -63,7 +63,7 @@ Each category lives in its own location under the backup folder and is retained 
 
 - Any snapshot — backup, manual, or safety — can be restored.
 - Restore is confirmed with an in-app dialog before anything changes.
-- **Before** overwriting the current save, GameSaveGuard automatically creates a **safety
+- **Before** overwriting the current save, Save Grave automatically creates a **safety
   snapshot** of the current save (when it exists and has data), so a restore is itself reversible
   ("undo a restore" by restoring the safety snapshot).
 - Restore replaces the save directory's **contents in place** rather than deleting and recreating
@@ -81,6 +81,37 @@ Each category lives in its own location under the backup folder and is retained 
 
 ---
 
+## Managing recovery points
+
+- **Open snapshot folder** — opens the exact directory of a recovery point in the OS file manager
+  (Explorer / Finder / Linux file manager).
+- **Copy snapshot path** — copies a recovery point's folder path to the clipboard.
+- **Delete snapshot** — manually removes an unwanted recovery point (confirmed first). Deletion is
+  serialized against backups/restores for the same game and never touches the active save.
+- **Copy save/backup folder path** — per-game clipboard actions in the overflow menu.
+- **Open save/backup folder** — per-game actions that reveal the directories in the file manager.
+
+---
+
+## Storage usage
+
+- Shows how much disk Save Grave is consuming, so retention and manual snapshots stay
+  transparent.
+- **Global:** a header summary — "Save Grave backups are using 1.8 GB."
+- **Per game:** total storage on each library card and in the game-details stats.
+- **Per category:** the details view breaks counts down into Backups, Manual, and Safety.
+
+---
+
+## Last-checked indicator
+
+- Distinguishes **Last backup** ("3 hours ago") from **Last checked** ("30 seconds ago").
+- A save may not have needed a backup for hours simply because nothing changed; showing the most
+  recent reconciliation reassures the user that monitoring is still running. The monitor raises a
+  check event on every reconciliation pass, which the UI surfaces per game.
+
+---
+
 ## User interface
 
 A dark, minimal desktop UI themed from the "Inklog" color system (warm copper accent on a
@@ -88,20 +119,23 @@ charcoal palette), built on a centralized set of reusable Avalonia styles (color
 buttons, cards, inputs, status badges, dialogs, separators, timeline).
 
 ### App shell
-- Branded header ("GameSaveGuard" + tagline) with a shield mark.
+- Branded header ("Save Grave" + tagline) with a shield mark.
 - Centered content area (max ~1180px) that scales gracefully when resized.
 - Default window ~1200×760 with a sensible minimum size.
 - Native window frame, tinted dark to match the app on supported Windows versions.
 
 ### Protected Games library
+- A global storage summary in the header ("Save Grave backups are using 1.8 GB.").
 - Each game is shown as a card with:
   - A live **status dot** and **status badge**.
   - **Last backup** time (relative, e.g. "3 minutes ago") — reflects the most recent automatic
     backup **or** manual snapshot.
-  - A centered **count breakdown**: Backups · Manual · Safety.
+  - **Last checked** time — the most recent monitoring reconciliation, so the user can see
+    protection is still running even when nothing has changed for hours.
+  - A centered **count breakdown**: Backups · Manual · Safety · Storage.
   - **View Backups** and accent **Take Snapshot** actions.
-  - A **⋮ overflow menu**: Open save folder, Open backup folder, Pause/Resume protection, and
-    Remove (danger-styled).
+  - A **⋮ overflow menu**: Open save folder, Open backup folder, Copy save folder path, Copy
+    backup folder path, Pause/Resume protection, and Remove (danger-styled).
 - A deliberate **empty state** when no games are protected yet.
 
 ### Protection status
@@ -117,11 +151,13 @@ Reusable status badge with semantic colors:
 ### Game details (in-window)
 - Clicking **View Backups** navigates the main window to a game-details screen (not a separate
   window), with a **← Protected Games** back link.
-- Header shows the game name, status, and a stats row (Last backup, Backups, Manual, Safety, Save
-  folder), plus a **Take Snapshot** button.
+- Header shows the game name, status, a **Take Snapshot** button, and a stats block: Last backup,
+  Last checked, Storage used, Save folder, plus the Backups / Manual / Safety counts.
 - Three cards — **Backups**, **Manual Snapshots**, **Safety Snapshots** — each rendering its
-  recovery points as a **timeline** (dot + connecting rail) with time, subtitle, size, and a
-  **Restore** button. Each card shows an empty-state line when it has no entries.
+  recovery points as a **timeline** (dot + connecting rail) with time, subtitle, size, a
+  **Restore** button, and a **⋮ menu** per recovery point: Open snapshot folder, Copy snapshot
+  path, and Delete snapshot (confirmed, danger-styled). Each card shows an empty-state line when it
+  has no entries.
 
 ### Add Game
 - Focused in-app dialog with labeled fields: Game name, Save folder (Browse), Backup location
@@ -148,14 +184,44 @@ Reusable status badge with semantic colors:
 ### Configuration
 - Protected games are persisted as a JSON file in a per-user application data directory
   (`%APPDATA%\GameSaveGuard\targets.json` on Windows; `~/.config/GameSaveGuard/...` on
-  Linux/macOS), not beside the executable.
+  Linux/macOS), not beside the executable. The on-disk folder name intentionally keeps the
+  original `GameSaveGuard` app id so existing data survives the rebrand without migration.
 - Writes are atomic (temp file then move) so a crash mid-write can't corrupt the configuration.
-- Configuration survives application restarts.
+- Configuration survives application restarts. App-wide settings persist to a sibling
+  `settings.json`.
 
 ### Logging
 - A file logger writes dated logs to `<app data>/GameSaveGuard/logs/saveguard-YYYY-MM-DD.log`.
 - Backup, manual-snapshot, and restore operations log start/completion, and failures log the full
   exception for diagnosis. Logging never throws into the application.
+
+### Settings
+- App-wide preferences persist to `<app data>/GameSaveGuard/settings.json` (atomic write; corrupt
+  or missing settings fall back to defaults).
+- A **Settings** dialog (gear in the header) exposes the toggles below; changes apply and save
+  immediately.
+
+---
+
+## Background operation & system tray
+
+- Save Grave can keep monitoring and backing up even when the main window is closed, so
+  protection does not depend on keeping a window open.
+- A **system tray icon** provides a menu: Open Save Grave, Take Snapshot (all games), Pause All
+  Protection, Resume All Protection, and Exit. Clicking the icon opens the window.
+- **Close-to-tray** (a setting, on by default): closing the window hides it to the tray and
+  protection keeps running; the app only exits via the tray's **Exit**. A one-time notice explains
+  this the first time the window is closed. Turning the setting off makes closing the window exit
+  the app.
+
+## Launch at startup
+
+- An opt-in **Launch at startup** setting starts Save Grave automatically at login — important
+  for an automatic backup utility so protection doesn't depend on the user remembering to open it.
+- On **Windows** this registers the app under the per-user `Run` key. On **macOS/Linux** the option
+  is reported as unsupported for now (the toggle is disabled) and does nothing, pending a
+  platform-native implementation (LaunchAgent / autostart `.desktop`).
+- The saved preference is reconciled with the OS registration on each launch.
 
 ---
 
@@ -186,6 +252,8 @@ including:
   pausing monitoring halt backups.
 - Path-overlap detection (backup folder inside save folder, and vice versa).
 - Backup targets round-trip through JSON configuration and persist across store instances.
+- Storage usage reports per-category and total bytes; a single recovery point can be deleted.
+- App settings round-trip through JSON and fall back to defaults when missing or corrupt.
 
 ---
 

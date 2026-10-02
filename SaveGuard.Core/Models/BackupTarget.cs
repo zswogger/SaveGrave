@@ -1,7 +1,7 @@
 namespace SaveGuard.Core.Models;
 
 /// <summary>
-/// A game save directory that GameSaveGuard protects by creating versioned backups.
+/// A game save directory that Save Grave protects by creating versioned backups.
 /// </summary>
 public sealed class BackupTarget
 {
@@ -9,7 +9,7 @@ public sealed class BackupTarget
 
     public string DisplayName { get; set; } = string.Empty;
 
-    /// <summary>The active save directory to protect. GameSaveGuard only writes here during a restore.</summary>
+    /// <summary>The active save directory to protect. Save Grave only writes here during a restore.</summary>
     public string SourcePath { get; set; } = string.Empty;
 
     /// <summary>The root directory under which snapshots for this target are stored.</summary>

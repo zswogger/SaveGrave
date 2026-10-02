@@ -2,7 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!--
-        Semantic color system for GameSaveGuard.
+        Semantic color system for Save Grave.
         Colors are translated from the Inklog "dark" theme (InklogAngular/src/styles.css):
           ink-bg #0F1115, ink-surface #1B1F24, ink-canvas #242932,
           ink-muted #5A616B, ink-text #F5F7FA, ink-accent #C77D4A, error #F87171.

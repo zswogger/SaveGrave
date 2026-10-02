@@ -138,7 +138,7 @@ public class SnapshotServiceTests
         using var save = new TempDirectory();
         save.WriteFile("save.dat", "payload");
         save.WriteFile(Path.Combine("profiles", "p1.json"), "profile");
-        var backupPath = save.Combine("GameSaveGuardBackups");
+        var backupPath = save.Combine("SaveGraveBackups");
 
         var service = new SnapshotService();
         var targetId = Guid.NewGuid();
@@ -151,7 +151,7 @@ public class SnapshotServiceTests
         Assert.True(File.Exists(Path.Combine(second.Path, "profiles", "p1.json")));
 
         // ...but neither contains a copy of the backup directory (no self-nesting).
-        Assert.False(Directory.Exists(Path.Combine(second.Path, "GameSaveGuardBackups")));
+        Assert.False(Directory.Exists(Path.Combine(second.Path, "SaveGraveBackups")));
         Assert.Equal(2, service.GetSnapshots(targetId, backupPath).Count);
         _ = first;
     }

@@ -51,6 +51,12 @@ public partial class GameItemViewModel : ViewModelBase
     [ObservableProperty]
     public partial DateTimeOffset? LastBackupAt { get; set; }
 
+    [ObservableProperty]
+    public partial long StorageBytes { get; set; }
+
+    [ObservableProperty]
+    public partial DateTimeOffset? LastCheckedAt { get; set; }
+
     /// <summary>Free-form status message (used for error detail). Kept for backward compatibility.</summary>
     [ObservableProperty]
     public partial string Status { get; set; } = "Protected";
@@ -85,14 +91,24 @@ public partial class GameItemViewModel : ViewModelBase
 
     public string LastBackupValue => LastBackupAt is { } at ? FormatRelative(at) : "No backups yet";
 
+    public string LastCheckedValue => LastCheckedAt is { } at ? FormatRelative(at) : "Not yet checked";
+
     /// <summary>Re-raises the relative-time text so "x minutes ago" keeps counting up over time.</summary>
-    public void RefreshRelativeTimes() => OnPropertyChanged(nameof(LastBackupValue));
+    public void RefreshRelativeTimes()
+    {
+        OnPropertyChanged(nameof(LastBackupValue));
+        OnPropertyChanged(nameof(LastCheckedValue));
+    }
+
+    partial void OnLastCheckedAtChanged(DateTimeOffset? value) => OnPropertyChanged(nameof(LastCheckedValue));
 
     public string BackupCountValue => BackupCount.ToString();
 
     public string ManualCountValue => ManualCount.ToString();
 
     public string SafetyCountValue => SafetyCount.ToString();
+
+    public string StorageValue => SaveGuard.Core.ByteSize.Format(StorageBytes);
 
     partial void OnLastBackupAtChanged(DateTimeOffset? value) => OnPropertyChanged(nameof(LastBackupValue));
 
@@ -101,6 +117,8 @@ public partial class GameItemViewModel : ViewModelBase
     partial void OnManualCountChanged(int value) => OnPropertyChanged(nameof(ManualCountValue));
 
     partial void OnSafetyCountChanged(int value) => OnPropertyChanged(nameof(SafetyCountValue));
+
+    partial void OnStorageBytesChanged(long value) => OnPropertyChanged(nameof(StorageValue));
 
     partial void OnStateChanged(ProtectionState value)
     {

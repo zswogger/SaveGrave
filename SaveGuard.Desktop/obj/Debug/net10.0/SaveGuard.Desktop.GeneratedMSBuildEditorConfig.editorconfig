@@ -9,7 +9,7 @@ build_property.AvaloniaNameGeneratorAttachDevTools = true
 build_property.AvaloniaUseCompiledBindingsByDefault = true
 build_property.AvaloniaMainPackageVersion = 12.1.3
 build_property.AvaloniaPreviewerNetCoreToolPath = C:\Users\zachs\.nuget\packages\avalonia\12.1.3\buildTransitive\\..\tools\net8.0\designer\Avalonia.Designer.HostApp.dll
-build_property.AvaloniaResourcePaths = E:\repos\SideProjects\GameSaveGuard\SaveGuard.Desktop\Assets\avalonia-logo.ico,E:\repos\SideProjects\GameSaveGuard\SaveGuard.Desktop\App.axaml,E:\repos\SideProjects\GameSaveGuard\SaveGuard.Desktop\Styles\Colors.axaml,E:\repos\SideProjects\GameSaveGuard\SaveGuard.Desktop\Styles\Controls.axaml,E:\repos\SideProjects\GameSaveGuard\SaveGuard.Desktop\Views\AddGameView.axaml,E:\repos\SideProjects\GameSaveGuard\SaveGuard.Desktop\Views\GameDetailsView.axaml,E:\repos\SideProjects\GameSaveGuard\SaveGuard.Desktop\Views\MainWindow.axaml,E:\repos\SideProjects\GameSaveGuard\SaveGuard.Desktop\Views\ProtectedGamesView.axaml
+build_property.AvaloniaResourcePaths = E:\repos\SideProjects\GameSaveGuard\SaveGuard.Desktop\Assets\save-grave-logo.ico,E:\repos\SideProjects\GameSaveGuard\SaveGuard.Desktop\Assets\save-grave-logo.png,E:\repos\SideProjects\GameSaveGuard\SaveGuard.Desktop\Assets\save-grave-logo.ico,E:\repos\SideProjects\GameSaveGuard\SaveGuard.Desktop\App.axaml,E:\repos\SideProjects\GameSaveGuard\SaveGuard.Desktop\Styles\Colors.axaml,E:\repos\SideProjects\GameSaveGuard\SaveGuard.Desktop\Styles\Controls.axaml,E:\repos\SideProjects\GameSaveGuard\SaveGuard.Desktop\Views\AddGameView.axaml,E:\repos\SideProjects\GameSaveGuard\SaveGuard.Desktop\Views\GameDetailsView.axaml,E:\repos\SideProjects\GameSaveGuard\SaveGuard.Desktop\Views\MainWindow.axaml,E:\repos\SideProjects\GameSaveGuard\SaveGuard.Desktop\Views\ProtectedGamesView.axaml,E:\repos\SideProjects\GameSaveGuard\SaveGuard.Desktop\Views\SettingsView.axaml
 build_property.MvvmToolkitEnableINotifyPropertyChangingSupport = true
 build_property._MvvmToolkitIsUsingWindowsRuntimePack = false
 build_property.CsWinRTComponent = 
@@ -52,4 +52,7 @@ build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
 [E:/repos/SideProjects/GameSaveGuard/SaveGuard.Desktop/Views/ProtectedGamesView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[E:/repos/SideProjects/GameSaveGuard/SaveGuard.Desktop/Views/SettingsView.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml

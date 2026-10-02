@@ -33,4 +33,10 @@ public interface IBackupService
     /// Safety snapshots are the automatic copies taken just before a restore.
     /// </summary>
     IReadOnlyList<Snapshot> GetSnapshots(BackupTarget target, SnapshotKind kind = SnapshotKind.Backup);
+
+    /// <summary>Permanently deletes a single snapshot directory for the given target.</summary>
+    Task DeleteSnapshotAsync(BackupTarget target, Snapshot snapshot, CancellationToken cancellationToken = default);
+
+    /// <summary>Computes on-disk storage used by the target's snapshots, broken down by category.</summary>
+    StorageUsage GetStorageUsage(BackupTarget target);
 }

@@ -39,12 +39,23 @@ public partial class GameDetailsViewModel : ViewModelBase
     /// <summary>Set by the host: shows a confirmation prompt, returns true to proceed with the restore.</summary>
     public Func<Snapshot, Task<bool>>? ConfirmRestoreAsync { get; set; }
 
+    /// <summary>Set by the host: confirms deleting a single recovery point.</summary>
+    public Func<Snapshot, Task<bool>>? ConfirmDeleteAsync { get; set; }
+
     /// <summary>Set by the host: surfaces a completion or error message to the user.</summary>
     public Func<string, Task>? ShowMessageAsync { get; set; }
+
+    /// <summary>Set by the host: opens a folder in the OS file manager.</summary>
+    public Action<string>? OpenFolder { get; set; }
+
+    /// <summary>Set by the host: copies text to the clipboard.</summary>
+    public Func<string, Task>? CopyToClipboardAsync { get; set; }
 
     public string DisplayName => Game.DisplayName;
 
     public string SourcePath => Game.SourcePath;
+
+    public string StorageUsageValue => SaveGuard.Core.ByteSize.Format(_backupService.GetStorageUsage(Game.Target).TotalBytes);
 
     public ObservableCollection<SnapshotItemViewModel> Snapshots { get; } = [];
 
@@ -66,11 +77,17 @@ public partial class GameDetailsViewModel : ViewModelBase
 
     public string LastBackupValue => Game.LastBackupValue;
 
+    public string LastCheckedValue => Game.LastCheckedValue;
+
     [ObservableProperty]
     public partial bool IsBusy { get; set; }
 
     /// <summary>Re-raises relative-time labels so "x ago" stays current without a reload.</summary>
-    public void RefreshRelativeTimes() => OnPropertyChanged(nameof(LastBackupValue));
+    public void RefreshRelativeTimes()
+    {
+        OnPropertyChanged(nameof(LastBackupValue));
+        OnPropertyChanged(nameof(LastCheckedValue));
+    }
 
     [RelayCommand]
     private void Back() => OnBack();
@@ -150,25 +167,69 @@ public partial class GameDetailsViewModel : ViewModelBase
         }
     }
 
+    [RelayCommand]
+    private void OpenSnapshotFolder(SnapshotItemViewModel? item)
+    {
+        if (item is not null)
+            OpenFolder?.Invoke(item.Path);
+    }
+
+    [RelayCommand]
+    private async Task CopySnapshotPath(SnapshotItemViewModel? item)
+    {
+        if (item is not null && CopyToClipboardAsync is not null)
+            await CopyToClipboardAsync(item.Path);
+    }
+
+    [RelayCommand]
+    private async Task DeleteSnapshot(SnapshotItemViewModel? item)
+    {
+        if (item is null || IsBusy)
+            return;
+
+        if (ConfirmDeleteAsync is not null && !await ConfirmDeleteAsync(item.Snapshot))
+            return;
+
+        IsBusy = true;
+        try
+        {
+            await _backupService.DeleteSnapshotAsync(Game.Target, item.Snapshot);
+            Reload();
+            if (ShowMessageAsync is not null)
+                await ShowMessageAsync("Recovery point deleted.");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Delete snapshot failed for '{Game.DisplayName}' at the UI layer.", ex);
+            if (ShowMessageAsync is not null)
+                await ShowMessageAsync($"Delete failed: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
     private void Reload()
     {
         Snapshots.Clear();
         foreach (var snapshot in _backupService.GetSnapshots(Game.Target, SnapshotKind.Backup))
-            Snapshots.Add(new SnapshotItemViewModel(snapshot, "Automatic backup"));
+            Snapshots.Add(new SnapshotItemViewModel(snapshot, "Automatic backup", this));
 
         SafetySnapshots.Clear();
         foreach (var snapshot in _backupService.GetSnapshots(Game.Target, SnapshotKind.Safety))
-            SafetySnapshots.Add(new SnapshotItemViewModel(snapshot, "Created before restore"));
+            SafetySnapshots.Add(new SnapshotItemViewModel(snapshot, "Created before restore", this));
 
         ManualSnapshots.Clear();
         foreach (var snapshot in _backupService.GetSnapshots(Game.Target, SnapshotKind.Manual))
-            ManualSnapshots.Add(new SnapshotItemViewModel(snapshot, "Manual snapshot"));
+            ManualSnapshots.Add(new SnapshotItemViewModel(snapshot, "Manual snapshot", this));
 
         // Keep the library card's stats in sync with what the details view shows. "Last backup" is
         // the most recent of an automatic backup or a manual snapshot.
         Game.BackupCount = Snapshots.Count;
         Game.ManualCount = ManualSnapshots.Count;
         Game.SafetyCount = SafetySnapshots.Count;
+        Game.StorageBytes = _backupService.GetStorageUsage(Game.Target).TotalBytes;
         DateTimeOffset? newestBackup = Snapshots.Count > 0 ? Snapshots[0].Snapshot.CreatedAt : null;
         DateTimeOffset? newestManual = ManualSnapshots.Count > 0 ? ManualSnapshots[0].Snapshot.CreatedAt : null;
         Game.LastBackupAt = newestManual is null || (newestBackup is not null && newestBackup > newestManual)
@@ -182,5 +243,6 @@ public partial class GameDetailsViewModel : ViewModelBase
         OnPropertyChanged(nameof(ManualCountValue));
         OnPropertyChanged(nameof(SafetyCountValue));
         OnPropertyChanged(nameof(LastBackupValue));
+        OnPropertyChanged(nameof(StorageUsageValue));
     }
 }

@@ -17,7 +17,7 @@
 
             <StackPanel Spacing="7">
                 <TextBlock Classes="label" Text="Game name" />
-                <TextBox Text="{Binding GameName}" PlaceholderText="RuneScape: Dragonwilds" />
+                <TextBox Text="{Binding GameName}" PlaceholderText="Display Name" />
             </StackPanel>
 
             <StackPanel Spacing="7">

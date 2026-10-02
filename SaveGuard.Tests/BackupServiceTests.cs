@@ -302,6 +302,47 @@ public class BackupServiceTests
     }
 
     [Fact]
+    public async Task GetStorageUsage_ReportsPerCategoryAndTotal()
+    {
+        using var save = new TempDirectory();
+        using var backup = new TempDirectory();
+        save.WriteFile("save.dat", "some content here");
+
+        var service = new BackupService(new SnapshotService(), new TestLogger());
+        var target = NewTarget(save.Path, backup.Path, maxBackups: 10);
+
+        await service.BackupAsync(target);
+        await service.TakeManualSnapshotAsync(target);
+
+        var usage = service.GetStorageUsage(target);
+
+        Assert.True(usage.BackupBytes > 0);
+        Assert.True(usage.ManualBytes > 0);
+        Assert.Equal(0, usage.SafetyBytes);
+        Assert.Equal(usage.BackupBytes + usage.ManualBytes + usage.SafetyBytes, usage.TotalBytes);
+    }
+
+    [Fact]
+    public async Task DeleteSnapshotAsync_RemovesTheSnapshot()
+    {
+        using var save = new TempDirectory();
+        using var backup = new TempDirectory();
+        save.WriteFile("save.dat", "v1");
+
+        var service = new BackupService(new SnapshotService(), new TestLogger());
+        var target = NewTarget(save.Path, backup.Path, maxBackups: 10);
+
+        var snapshot = await service.BackupAsync(target);
+        Assert.NotNull(snapshot);
+        Assert.Single(service.GetSnapshots(target));
+
+        await service.DeleteSnapshotAsync(target, snapshot!);
+
+        Assert.Empty(service.GetSnapshots(target));
+        Assert.False(Directory.Exists(snapshot!.Path));
+    }
+
+    [Fact]
     public async Task FailedRestore_IsLoggedAsError()
     {
         using var backup = new TempDirectory();

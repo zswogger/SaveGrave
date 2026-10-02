@@ -1,7 +1,7 @@
 namespace SaveGuard.Core.Models;
 
 /// <summary>
-/// Distinguishes the three kinds of snapshot GameSaveGuard keeps. Each kind is stored and pruned
+/// Distinguishes the three kinds of snapshot Save Grave keeps. Each kind is stored and pruned
 /// separately so the categories never interfere with one another:
 ///   <list type="bullet">
 ///     <item><description><see cref="Backup"/>: automatic, change-triggered backups.</description></item>

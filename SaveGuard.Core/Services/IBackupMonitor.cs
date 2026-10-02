@@ -26,6 +26,12 @@ public interface IBackupMonitor : IDisposable
 
     /// <summary>Raised after a backup triggered by monitoring completes (successfully or not).</summary>
     event EventHandler<BackupCompletedEventArgs>? BackupCompleted;
+
+    /// <summary>
+    /// Raised after each periodic reconciliation pass for a target, regardless of whether a backup
+    /// was needed. Lets the UI reassure the user that monitoring is still running ("last checked").
+    /// </summary>
+    event EventHandler<MonitorCheckEventArgs>? CheckCompleted;
 }
 
 public sealed class BackupCompletedEventArgs : EventArgs
@@ -37,4 +43,11 @@ public sealed class BackupCompletedEventArgs : EventArgs
     public Exception? Error { get; init; }
 
     public bool Succeeded => Error is null && Snapshot is not null;
+}
+
+public sealed class MonitorCheckEventArgs : EventArgs
+{
+    public required Guid TargetId { get; init; }
+
+    public required DateTimeOffset CheckedAt { get; init; }
 }

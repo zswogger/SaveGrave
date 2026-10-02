@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SaveGuard.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6a233896599654d9bf5099fac1006ee6c430153f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ebf3455ea688a797d9829c2d3a210d5484fed447")]
 [assembly: System.Reflection.AssemblyProductAttribute("SaveGuard.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SaveGuard.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

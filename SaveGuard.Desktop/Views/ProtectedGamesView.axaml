@@ -14,6 +14,7 @@
                 <TextBlock Classes="h1" Text="Protected Games" />
                 <TextBlock Classes="secondary"
                            Text="Your saves are automatically backed up when changes are detected." />
+                <TextBlock Classes="meta" Text="{Binding TotalStorageSummary}" IsVisible="{Binding HasGames}" />
             </StackPanel>
             <Button Grid.Column="1" Classes="primary" VerticalAlignment="Center"
                     Command="{Binding AddGameCommand}">
@@ -27,18 +28,16 @@
 
         <!-- Empty state -->
         <Border Grid.Row="1" IsVisible="{Binding !HasGames}" Classes="card"
-                Padding="40" VerticalAlignment="Center" HorizontalAlignment="Center"
-                MaxWidth="440">
-            <StackPanel Spacing="14" HorizontalAlignment="Center">
-                <Border Width="56" Height="56" CornerRadius="16" HorizontalAlignment="Center"
-                        Background="{DynamicResource AccentSoftBrush}">
-                    <PathIcon Width="26" Height="26" Foreground="{DynamicResource AccentBrush}"
-                              Data="M12 2 L21 5 V11 C21 16 17 20 12 22 C7 20 3 16 3 11 V5 Z M8.5 12 L11 14.5 L15.5 9.5" />
+                Padding="44" VerticalAlignment="Center" HorizontalAlignment="Center"
+                MaxWidth="460">
+            <StackPanel Spacing="16" HorizontalAlignment="Center">
+                <Border Width="104" Height="104" CornerRadius="22" HorizontalAlignment="Center" ClipToBounds="True">
+                    <Image Source="/Assets/save-grave-logo.png" Width="104" Height="104" Stretch="UniformToFill" />
                 </Border>
-                <TextBlock Classes="h2" Text="Protect your first game" HorizontalAlignment="Center" />
+                <TextBlock Classes="h2" Text="Protect your first game" HorizontalAlignment="Center" Margin="0,2,0,0" />
                 <TextBlock Classes="secondary" HorizontalAlignment="Center" TextAlignment="Center"
                            TextWrapping="Wrap" MaxWidth="340"
-                           Text="GameSaveGuard automatically creates recovery points when your save files change." />
+                           Text="Save Grave automatically creates recovery points when your save files change." />
                 <Button Classes="primary" HorizontalAlignment="Center" Margin="0,4,0,0"
                         Command="{Binding AddGameCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="8">
@@ -93,11 +92,19 @@
                                             <MenuItem Header="Open backup folder"
                                                       Command="{Binding Owner.OpenBackupFolderCommand}"
                                                       CommandParameter="{Binding}" />
+                                            <Separator />
+                                            <MenuItem Header="Copy save folder path"
+                                                      Command="{Binding Owner.CopySaveFolderPathCommand}"
+                                                      CommandParameter="{Binding}" />
+                                            <MenuItem Header="Copy backup folder path"
+                                                      Command="{Binding Owner.CopyBackupFolderPathCommand}"
+                                                      CommandParameter="{Binding}" />
+                                            <Separator />
                                             <MenuItem Header="{Binding PauseResumeLabel}"
                                                       Command="{Binding Owner.TogglePauseCommand}"
                                                       CommandParameter="{Binding}" />
                                             <Separator />
-                                            <MenuItem Header="Remove from GameSaveGuard" Classes="danger"
+                                            <MenuItem Header="Remove from Save Grave" Classes="danger"
                                                       Command="{Binding Owner.RemoveGameCommand}"
                                                       CommandParameter="{Binding}" />
                                         </MenuFlyout>
@@ -107,13 +114,19 @@
                                 <!-- Metadata + action row -->
                                 <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,18,0,0"
                                       ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
-                                    <StackPanel Grid.Column="0" Spacing="3" VerticalAlignment="Center">
-                                        <TextBlock Classes="meta" Text="Last backup" />
-                                        <TextBlock Text="{Binding LastBackupValue}" />
+                                    <StackPanel Grid.Column="0" Spacing="10" VerticalAlignment="Center">
+                                        <StackPanel Spacing="3">
+                                            <TextBlock Classes="meta" Text="Last backup" />
+                                            <TextBlock Text="{Binding LastBackupValue}" />
+                                        </StackPanel>
+                                        <StackPanel Spacing="3">
+                                            <TextBlock Classes="meta" Text="Last checked" />
+                                            <TextBlock Text="{Binding LastCheckedValue}" />
+                                        </StackPanel>
                                     </StackPanel>
 
                                     <!-- Centered count breakdown filling the middle of the card. -->
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="48"
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="44"
                                                 HorizontalAlignment="Center" VerticalAlignment="Center">
                                         <StackPanel Spacing="2">
                                             <TextBlock Classes="countValue" Text="{Binding BackupCountValue}" />
@@ -126,6 +139,10 @@
                                         <StackPanel Spacing="2">
                                             <TextBlock Classes="countValue" Text="{Binding SafetyCountValue}" />
                                             <TextBlock Classes="countLabel" Text="Safety" />
+                                        </StackPanel>
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Classes="countValue" Text="{Binding StorageValue}" />
+                                            <TextBlock Classes="countLabel" Text="Storage" />
                                         </StackPanel>
                                     </StackPanel>
 

@@ -5,11 +5,18 @@ namespace SaveGuard.Desktop.ViewModels;
 /// <summary>Presentation wrapper around a <see cref="Snapshot"/> for the recovery-point timeline.</summary>
 public sealed class SnapshotItemViewModel : ViewModelBase
 {
-    public SnapshotItemViewModel(Snapshot snapshot, string subtitle)
+    public SnapshotItemViewModel(Snapshot snapshot, string subtitle, GameDetailsViewModel? owner = null)
     {
         Snapshot = snapshot;
         Subtitle = subtitle;
+        Owner = owner;
     }
+
+    /// <summary>
+    /// Back-reference to the details view model. Flyout menu content lives in a popup outside the
+    /// ItemsControl visual tree, so commands bind through the item rather than an ancestor lookup.
+    /// </summary>
+    public GameDetailsViewModel? Owner { get; }
 
     public Snapshot Snapshot { get; }
 
@@ -21,19 +28,7 @@ public sealed class SnapshotItemViewModel : ViewModelBase
 
     public string FullDateText => Snapshot.CreatedAt.ToLocalTime().ToString("MMMM d, yyyy h:mm tt");
 
-    public string SizeText => FormatSize(Snapshot.SizeBytes);
+    public string SizeText => SaveGuard.Core.ByteSize.Format(Snapshot.SizeBytes);
 
-    private static string FormatSize(long bytes)
-    {
-        string[] units = ["B", "KB", "MB", "GB", "TB"];
-        double size = bytes;
-        var unit = 0;
-        while (size >= 1024 && unit < units.Length - 1)
-        {
-            size /= 1024;
-            unit++;
-        }
-
-        return unit == 0 ? $"{bytes} {units[unit]}" : $"{size:0.0} {units[unit]}";
-    }
+    public string Path => Snapshot.Path;
 }
