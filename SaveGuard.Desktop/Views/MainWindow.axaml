@@ -1,0 +1,60 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SaveGuard.Desktop.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="640" d:DesignHeight="520"
+        x:Class="SaveGuard.Desktop.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Width="640" Height="520"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="GameSaveGuard">
+
+    <Design.DataContext>
+        <vm:MainViewModel />
+    </Design.DataContext>
+
+    <DockPanel Margin="20">
+        <TextBlock DockPanel.Dock="Top" Text="GameSaveGuard" FontSize="24" FontWeight="Bold" />
+        <Border DockPanel.Dock="Top" BorderBrush="#CCCCCC" BorderThickness="0,0,0,1" Margin="0,8,0,12" />
+
+        <TextBlock DockPanel.Dock="Top" Text="Protected Games" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8" />
+
+        <Button DockPanel.Dock="Bottom" Content="+ Add Game" HorizontalAlignment="Left" Margin="0,12,0,0"
+                Command="{Binding AddGameCommand}" />
+
+        <Panel>
+            <TextBlock Text="No games protected yet. Click &quot;Add Game&quot; to get started."
+                       IsVisible="{Binding !HasGames}" Foreground="#777777" />
+
+            <ScrollViewer IsVisible="{Binding HasGames}">
+                <ItemsControl ItemsSource="{Binding Games}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:GameItemViewModel">
+                            <Border BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,0,0,8">
+                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding DisplayName}" FontWeight="SemiBold" FontSize="15" />
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding Status}" Foreground="#2E7D32" Margin="0,2,0,0" />
+                                    <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" Spacing="16" Margin="0,2,0,0">
+                                        <TextBlock Text="{Binding LastBackupText}" Foreground="#555555" />
+                                        <TextBlock Text="{Binding BackupCountText}" Foreground="#555555" />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Row="0" Grid.RowSpan="3" Grid.Column="1" Orientation="Horizontal"
+                                                Spacing="8" VerticalAlignment="Center">
+                                        <Button Content="View Backups"
+                                                Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).ViewBackupsCommand}"
+                                                CommandParameter="{Binding}" />
+                                        <Button Content="Remove"
+                                                Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).RemoveGameCommand}"
+                                                CommandParameter="{Binding}" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Panel>
+    </DockPanel>
+</Window>

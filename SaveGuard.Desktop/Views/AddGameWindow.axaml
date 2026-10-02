@@ -1,0 +1,41 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SaveGuard.Desktop.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="360"
+        x:Class="SaveGuard.Desktop.Views.AddGameWindow"
+        x:DataType="vm:AddGameViewModel"
+        Width="480" Height="360"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Title="Add Game">
+
+    <StackPanel Margin="20" Spacing="12">
+        <TextBlock Text="Game Name" />
+        <TextBox Text="{Binding GameName}" PlaceholderText="RuneScape: Dragonwilds" />
+
+        <TextBlock Text="Save Folder" />
+        <Grid ColumnDefinitions="*,Auto">
+            <TextBox Grid.Column="0" Text="{Binding SaveFolder}" IsReadOnly="True" />
+            <Button Grid.Column="1" Content="Browse" Margin="8,0,0,0" Command="{Binding BrowseSaveFolderCommand}" />
+        </Grid>
+
+        <TextBlock Text="Backup Location" />
+        <Grid ColumnDefinitions="*,Auto">
+            <TextBox Grid.Column="0" Text="{Binding BackupLocation}" IsReadOnly="True" />
+            <Button Grid.Column="1" Content="Browse" Margin="8,0,0,0" Command="{Binding BrowseBackupLocationCommand}" />
+        </Grid>
+
+        <TextBlock Text="Backups to Keep" />
+        <NumericUpDown Value="{Binding BackupsToKeep}" Minimum="1" Maximum="500" Increment="1" FormatString="0" />
+
+        <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" TextWrapping="Wrap"
+                   IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Content="Cancel" Click="OnCancel" />
+            <Button Content="Protect" Click="OnProtect" IsDefault="True" />
+        </StackPanel>
+    </StackPanel>
+</Window>

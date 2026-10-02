@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SaveGuard.Core/SaveGuard.Core.csproj" />
+  <Project Path="SaveGuard.Desktop/SaveGuard.Desktop.csproj" />
+  <Project Path="SaveGuard.Infrastructure/SaveGuard.Infrastructure.csproj" />
+  <Project Path="SaveGuard.Tests/SaveGuard.Tests.csproj" />
+</Solution>
