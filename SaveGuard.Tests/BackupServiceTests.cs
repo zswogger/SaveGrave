@@ -242,6 +242,66 @@ public class BackupServiceTests
     }
 
     [Fact]
+    public async Task TakeManualSnapshot_StoresSeparatelyFromBackups()
+    {
+        using var save = new TempDirectory();
+        using var backup = new TempDirectory();
+        save.WriteFile("save.dat", "v1");
+
+        var snapshotService = new SnapshotService();
+        var service = new BackupService(snapshotService, new TestLogger());
+        var target = NewTarget(save.Path, backup.Path, maxBackups: 10);
+
+        await service.BackupAsync(target);              // one automatic backup
+        var manual = await service.TakeManualSnapshotAsync(target);
+        Assert.NotNull(manual);
+
+        var backups = snapshotService.GetSnapshots(target.Id, target.BackupPath, SnapshotKind.Backup);
+        var manuals = snapshotService.GetSnapshots(target.Id, target.BackupPath, SnapshotKind.Manual);
+
+        Assert.Single(backups);
+        Assert.Single(manuals);
+        Assert.All(manuals, s => Assert.Contains("_manual", s.Path));
+        Assert.All(backups, s => Assert.DoesNotContain("_manual", s.Path));
+    }
+
+    [Fact]
+    public async Task TakeManualSnapshot_RestoresItsContents()
+    {
+        using var save = new TempDirectory();
+        using var backup = new TempDirectory();
+        save.WriteFile("save.dat", "manual-state");
+
+        var service = new BackupService(new SnapshotService(), new TestLogger());
+        var target = NewTarget(save.Path, backup.Path, maxBackups: 10);
+
+        var manual = await service.TakeManualSnapshotAsync(target);
+        Assert.NotNull(manual);
+
+        save.WriteFile("save.dat", "changed");
+        await service.RestoreAsync(target, manual!);
+
+        Assert.Equal("manual-state", File.ReadAllText(Path.Combine(save.Path, "save.dat")));
+    }
+
+    [Fact]
+    public async Task ManualSnapshotRetention_NeverExceedsMaxBackups()
+    {
+        using var save = new TempDirectory();
+        using var backup = new TempDirectory();
+
+        var service = new BackupService(new SnapshotService(), new TestLogger());
+        var target = NewTarget(save.Path, backup.Path, maxBackups: 2);
+
+        for (var i = 0; i < 5; i++)
+        {
+            save.WriteFile("save.dat", $"v{i}");
+            await service.TakeManualSnapshotAsync(target);
+            Assert.True(service.GetSnapshots(target, SnapshotKind.Manual).Count <= 2);
+        }
+    }
+
+    [Fact]
     public async Task FailedRestore_IsLoggedAsError()
     {
         using var backup = new TempDirectory();

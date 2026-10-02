@@ -52,6 +52,36 @@ public sealed class BackupService : IBackupService
         }
     }
 
+    public async Task<Snapshot?> TakeManualSnapshotAsync(BackupTarget target, CancellationToken cancellationToken = default)
+    {
+        var gate = _locks.GetOrAdd(target.Id, _ => new SemaphoreSlim(1, 1));
+
+        // Coalesce with any in-flight backup for this target, same as automatic backups.
+        if (!await gate.WaitAsync(0, cancellationToken).ConfigureAwait(false))
+            return null;
+
+        try
+        {
+            _logger.Info($"Manual snapshot starting for '{target.DisplayName}' ({target.Id}).");
+            var snapshot = await _snapshotService
+                .CreateSnapshotAsync(target.Id, target.SourcePath, target.BackupPath, SnapshotKind.Manual, cancellationToken)
+                .ConfigureAwait(false);
+
+            ApplyRetention(target, SnapshotKind.Manual);
+            _logger.Info($"Manual snapshot completed for '{target.DisplayName}': '{snapshot.Path}' ({snapshot.SizeBytes} bytes).");
+            return snapshot;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Manual snapshot failed for '{target.DisplayName}' ({target.Id}).", ex);
+            throw;
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
     public async Task RestoreAsync(BackupTarget target, Snapshot snapshot, CancellationToken cancellationToken = default)
     {
         var gate = _locks.GetOrAdd(target.Id, _ => new SemaphoreSlim(1, 1));

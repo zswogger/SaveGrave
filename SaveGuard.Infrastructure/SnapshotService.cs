@@ -14,6 +14,7 @@ public sealed class SnapshotService : ISnapshotService
     private const string IncompleteSuffix = ".incomplete";
 
     private const string SafetyFolderName = "_safety";
+    private const string ManualFolderName = "_manual";
 
     public async Task<Snapshot> CreateSnapshotAsync(Guid targetId, string sourcePath, string backupPath, SnapshotKind kind = SnapshotKind.Backup, CancellationToken cancellationToken = default)
     {
@@ -158,7 +159,12 @@ public sealed class SnapshotService : ISnapshotService
     private static string GetStorageRoot(Guid targetId, string backupPath, SnapshotKind kind)
     {
         var targetRoot = Path.Combine(backupPath, targetId.ToString());
-        return kind == SnapshotKind.Safety ? Path.Combine(targetRoot, SafetyFolderName) : targetRoot;
+        return kind switch
+        {
+            SnapshotKind.Safety => Path.Combine(targetRoot, SafetyFolderName),
+            SnapshotKind.Manual => Path.Combine(targetRoot, ManualFolderName),
+            _ => targetRoot,
+        };
     }
 
     private static string ReserveSnapshotPath(string targetRoot, DateTimeOffset createdAt)

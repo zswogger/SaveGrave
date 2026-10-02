@@ -1,0 +1,131 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SaveGuard.Desktop.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="640"
+             x:Class="SaveGuard.Desktop.Views.GameDetailsView"
+             x:DataType="vm:GameDetailsViewModel">
+
+    <UserControl.Resources>
+        <!-- Shared timeline row for all three snapshot categories. -->
+        <DataTemplate x:Key="SnapshotRow" x:DataType="vm:SnapshotItemViewModel">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,0,0,2">
+                <Grid Grid.Column="0" Width="22" RowDefinitions="Auto,*">
+                    <Ellipse Grid.Row="0" Classes="timelineDot" VerticalAlignment="Top" Margin="0,5,0,0" />
+                    <Rectangle Grid.Row="1" Classes="timelineLine" />
+                </Grid>
+                <StackPanel Grid.Column="1" Spacing="2" Margin="4,0,0,16">
+                    <TextBlock Text="{Binding TimeText}" FontWeight="SemiBold" />
+                    <TextBlock Classes="meta" Text="{Binding Subtitle}" />
+                </StackPanel>
+                <TextBlock Grid.Column="2" Classes="meta" Text="{Binding SizeText}"
+                           VerticalAlignment="Top" Margin="0,2,14,0" />
+                <Button Grid.Column="3" Content="Restore" VerticalAlignment="Top"
+                        Command="{Binding $parent[ItemsControl].((vm:GameDetailsViewModel)DataContext).RestoreCommand}"
+                        CommandParameter="{Binding}" />
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <DockPanel>
+        <!-- Back link -->
+        <Button DockPanel.Dock="Top" Classes="ghost" HorizontalAlignment="Left" Padding="8,6"
+                Margin="-8,0,0,14" Command="{Binding BackCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="7">
+                <PathIcon Width="12" Height="12" Foreground="{DynamicResource SecondaryTextBrush}"
+                          Data="M10 2 L4 8 L10 14" />
+                <TextBlock Text="Protected Games" Foreground="{DynamicResource SecondaryTextBrush}" />
+            </StackPanel>
+        </Button>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="20">
+                <!-- Detail header -->
+                <StackPanel Spacing="14">
+                    <Grid ColumnDefinitions="*,Auto,Auto">
+                        <StackPanel Grid.Column="0" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock Classes="h1" Text="{Binding DisplayName}" />
+                            <TextBlock Classes="secondary" Text="Automatic protection is active" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Classes="primary" VerticalAlignment="Center" Margin="0,0,12,0"
+                                IsEnabled="{Binding !IsBusy}" Command="{Binding TakeSnapshotCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="7">
+                                <PathIcon Width="12" Height="12" Foreground="{DynamicResource InkBg}"
+                                          Data="M7 1 H9 V7 H15 V9 H9 V15 H7 V9 H1 V7 H7 Z" />
+                                <TextBlock Text="Take Snapshot" Foreground="{DynamicResource InkBg}" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+                        <Border Grid.Column="2" Classes="badge success" VerticalAlignment="Center">
+                            <StackPanel>
+                                <Ellipse />
+                                <TextBlock Text="Protected" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <Border Classes="card" Padding="20,16">
+                        <Grid ColumnDefinitions="1.4*,Auto,Auto,Auto,2*">
+                            <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,24,0">
+                                <TextBlock Classes="meta" Text="Last backup" />
+                                <TextBlock Text="{Binding LastBackupValue}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Spacing="4" Margin="0,0,28,0">
+                                <TextBlock Classes="meta" Text="Backups" />
+                                <TextBlock Text="{Binding BackupCountValue}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Spacing="4" Margin="0,0,28,0">
+                                <TextBlock Classes="meta" Text="Manual" />
+                                <TextBlock Text="{Binding ManualCountValue}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="3" Spacing="4" Margin="0,0,28,0">
+                                <TextBlock Classes="meta" Text="Safety" />
+                                <TextBlock Text="{Binding SafetyCountValue}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="4" Spacing="4">
+                                <TextBlock Classes="meta" Text="Save folder" />
+                                <TextBlock Text="{Binding SourcePath}" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <!-- Backups card -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <StackPanel Spacing="3">
+                            <TextBlock Classes="h2" Text="Backups" />
+                            <TextBlock Classes="meta" Text="Automatic recovery points created when your save changes." />
+                        </StackPanel>
+                        <TextBlock Classes="meta" Text="No backups yet." IsVisible="{Binding !HasSnapshots}" />
+                        <ItemsControl ItemsSource="{Binding Snapshots}" ItemTemplate="{StaticResource SnapshotRow}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Manual Snapshots card -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <StackPanel Spacing="3">
+                            <TextBlock Classes="h2" Text="Manual Snapshots" />
+                            <TextBlock Classes="meta" Text="Snapshots you captured on demand with Take Snapshot." />
+                        </StackPanel>
+                        <TextBlock Classes="meta" Text="No manual snapshots yet." IsVisible="{Binding !HasManualSnapshots}" />
+                        <ItemsControl ItemsSource="{Binding ManualSnapshots}" ItemTemplate="{StaticResource SnapshotRow}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Safety Snapshots card -->
+                <Border Classes="card">
+                    <StackPanel Spacing="12">
+                        <StackPanel Spacing="3">
+                            <TextBlock Classes="h2" Text="Safety Snapshots" />
+                            <TextBlock Classes="meta" Text="Captured automatically before a restore. Use these to undo a restore." />
+                        </StackPanel>
+                        <TextBlock Classes="meta" Text="No safety snapshots yet." IsVisible="{Binding !HasSafetySnapshots}" />
+                        <ItemsControl ItemsSource="{Binding SafetySnapshots}" ItemTemplate="{StaticResource SnapshotRow}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

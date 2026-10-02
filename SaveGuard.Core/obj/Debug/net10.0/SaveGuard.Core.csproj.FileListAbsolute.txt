@@ -9,3 +9,4 @@ E:\repos\SideProjects\GameSaveGuard\SaveGuard.Core\obj\Debug\net10.0\SaveGuard.C
 E:\repos\SideProjects\GameSaveGuard\SaveGuard.Core\obj\Debug\net10.0\refint\SaveGuard.Core.dll
 E:\repos\SideProjects\GameSaveGuard\SaveGuard.Core\obj\Debug\net10.0\SaveGuard.Core.pdb
 E:\repos\SideProjects\GameSaveGuard\SaveGuard.Core\obj\Debug\net10.0\ref\SaveGuard.Core.dll
+E:\repos\SideProjects\GameSaveGuard\SaveGuard.Core\obj\Debug\net10.0\SaveGuard.Core.sourcelink.json

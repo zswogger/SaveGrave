@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -21,6 +22,8 @@ public partial class MainViewModel : ViewModelBase
     {
     }
 
+    private readonly DispatcherTimer _relativeTimeTimer;
+
     public MainViewModel(IBackupTargetStore store, (IBackupService Backup, IBackupMonitor Monitor, IAppLogger Logger) services)
     {
         _store = store;
@@ -28,26 +31,55 @@ public partial class MainViewModel : ViewModelBase
         _monitor = services.Monitor;
         _logger = services.Logger;
         _monitor.BackupCompleted += OnBackupCompleted;
+
+        // Refresh relative "x minutes ago" labels periodically so they stay accurate without a
+        // new backup. Purely presentational; touches no backup state.
+        _relativeTimeTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
+        _relativeTimeTimer.Tick += (_, _) => RefreshRelativeTimes();
+        _relativeTimeTimer.Start();
     }
 
-    /// <summary>Set by the view: opens the Add Game dialog and returns a new target, or null if cancelled.</summary>
+    private void RefreshRelativeTimes()
+    {
+        foreach (var game in Games)
+            game.RefreshRelativeTimes();
+        CurrentDetails?.RefreshRelativeTimes();
+    }
+
+    // --- View-provided interaction hooks (set by MainWindow). ---
+
+    /// <summary>Opens the Add Game dialog and returns a new target, or null if cancelled.</summary>
     public Func<Task<BackupTarget?>>? ShowAddGameDialogAsync { get; set; }
 
-    /// <summary>Set by the view: opens the backup-history window for a target.</summary>
-    public Func<BackupTarget, Task>? ShowBackupHistoryAsync { get; set; }
-
-    /// <summary>Set by the view: asks the user to confirm removing a protected game.</summary>
+    /// <summary>Asks the user to confirm removing a protected game.</summary>
     public Func<GameItemViewModel, Task<bool>>? ConfirmRemoveAsync { get; set; }
+
+    /// <summary>Confirms a restore for the given snapshot.</summary>
+    public Func<Snapshot, Task<bool>>? ConfirmRestoreAsync { get; set; }
+
+    /// <summary>Shows a transient/standard message to the user.</summary>
+    public Func<string, Task>? ShowMessageAsync { get; set; }
+
+    // --- Library state ---
 
     public ObservableCollection<GameItemViewModel> Games { get; } = [];
 
     public bool HasGames => Games.Count > 0;
 
-    public IBackupService BackupService => _backupService;
+    // --- Navigation state ---
 
-    public IBackupMonitor Monitor => _monitor;
+    [ObservableProperty]
+    public partial GameDetailsViewModel? CurrentDetails { get; set; }
 
-    public IAppLogger Logger => _logger;
+    public bool IsShowingDetails => CurrentDetails is not null;
+
+    public bool IsShowingLibrary => CurrentDetails is null;
+
+    partial void OnCurrentDetailsChanged(GameDetailsViewModel? value)
+    {
+        OnPropertyChanged(nameof(IsShowingDetails));
+        OnPropertyChanged(nameof(IsShowingLibrary));
+    }
 
     public async Task InitializeAsync()
     {
@@ -56,14 +88,12 @@ public partial class MainViewModel : ViewModelBase
         foreach (var target in loaded)
         {
             _targets.Add(target);
-            var item = new GameItemViewModel(target);
+            var item = new GameItemViewModel(target) { Owner = this };
 
-            // A target saved before overlap validation existed may have a backup location inside its
-            // save folder (or vice versa). Such a target cannot be backed up safely; flag it instead
-            // of letting backups fail silently.
             if (SaveGuard.Core.PathUtilities.Overlaps(target.SourcePath, target.BackupPath))
             {
-                item.Status = "Misconfigured: backup folder overlaps the save folder. Remove and re-add it.";
+                item.State = ProtectionState.Error;
+                item.Status = "Backup folder overlaps the save folder. Remove and re-add it.";
                 _logger.Warn($"Target '{target.DisplayName}' ({target.Id}) is misconfigured: backup path '{target.BackupPath}' overlaps save path '{target.SourcePath}'. Monitoring not started.");
                 Games.Add(item);
                 continue;
@@ -90,7 +120,7 @@ public partial class MainViewModel : ViewModelBase
         _targets.Add(target);
         await _store.SaveAsync(_targets);
 
-        var item = new GameItemViewModel(target);
+        var item = new GameItemViewModel(target) { Owner = this };
         Games.Add(item);
         OnPropertyChanged(nameof(HasGames));
 
@@ -112,19 +142,83 @@ public partial class MainViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
+            item.State = ProtectionState.Error;
             item.Status = $"Initial backup failed: {ex.Message}";
             _logger.Error($"Initial snapshot failed for '{item.Target.DisplayName}' ({item.Target.Id}).", ex);
         }
     }
 
     [RelayCommand]
-    private async Task ViewBackups(GameItemViewModel? item)
+    private void ViewBackups(GameItemViewModel? item)
     {
-        if (item is null || ShowBackupHistoryAsync is null)
+        if (item is null)
             return;
 
-        await ShowBackupHistoryAsync(item.Target);
-        RefreshStats(item);
+        var details = new GameDetailsViewModel(_backupService, _monitor, _logger, item, onBack: ShowLibrary)
+        {
+            ConfirmRestoreAsync = ConfirmRestoreAsync,
+            ShowMessageAsync = ShowMessageAsync,
+        };
+        CurrentDetails = details;
+    }
+
+    private void ShowLibrary() => CurrentDetails = null;
+
+    [RelayCommand]
+    private async Task TakeSnapshot(GameItemViewModel? item)
+    {
+        if (item is null || item.State == ProtectionState.Error)
+            return;
+
+        var previousState = item.State;
+        item.State = ProtectionState.BackingUp;
+        try
+        {
+            var snapshot = await _backupService.TakeManualSnapshotAsync(item.Target);
+            RefreshStats(item);
+            item.State = previousState == ProtectionState.BackingUp ? ProtectionState.Protected : previousState;
+
+            if (ShowMessageAsync is not null)
+            {
+                await ShowMessageAsync(snapshot is null
+                    ? "A backup is already in progress. Try again in a moment."
+                    : $"Manual snapshot created for \"{item.DisplayName}\".");
+            }
+        }
+        catch (Exception ex)
+        {
+            item.State = ProtectionState.Error;
+            item.Status = $"Snapshot failed: {ex.Message}";
+            _logger.Error($"Manual snapshot failed for '{item.DisplayName}' ({item.Id}).", ex);
+            if (ShowMessageAsync is not null)
+                await ShowMessageAsync($"Snapshot failed: {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    private void OpenSaveFolder(GameItemViewModel? item) => OpenFolder(item?.SourcePath);
+
+    [RelayCommand]
+    private void OpenBackupFolder(GameItemViewModel? item) => OpenFolder(item?.BackupPath);
+
+    [RelayCommand]
+    private void TogglePause(GameItemViewModel? item)
+    {
+        if (item is null || item.State == ProtectionState.Error)
+            return;
+
+        if (item.State == ProtectionState.Paused)
+        {
+            _monitor.Start(item.Target);
+            item.State = ProtectionState.Protected;
+            _logger.Info($"Protection resumed for '{item.DisplayName}'.");
+        }
+        else
+        {
+            _monitor.Stop(item.Id);
+            item.State = ProtectionState.Paused;
+            _logger.Info($"Protection paused for '{item.DisplayName}'.");
+        }
     }
 
     [RelayCommand]
@@ -142,11 +236,15 @@ public partial class MainViewModel : ViewModelBase
         Games.Remove(item);
         OnPropertyChanged(nameof(HasGames));
 
+        if (CurrentDetails?.Game.Id == item.Id)
+            ShowLibrary();
+
         await _store.SaveAsync(_targets);
     }
 
     public void Shutdown()
     {
+        _relativeTimeTimer.Stop();
         _monitor.BackupCompleted -= OnBackupCompleted;
         _monitor.Dispose();
     }
@@ -162,11 +260,14 @@ public partial class MainViewModel : ViewModelBase
 
             if (e.Succeeded)
             {
+                if (item.State != ProtectionState.Paused)
+                    item.State = ProtectionState.Protected;
                 item.Status = "Protected";
                 RefreshStats(item);
             }
             else
             {
+                item.State = ProtectionState.Error;
                 item.Status = $"Backup failed: {e.Error?.Message}";
             }
         });
@@ -174,9 +275,45 @@ public partial class MainViewModel : ViewModelBase
 
     private void RefreshStats(GameItemViewModel item)
     {
-        var snapshots = _backupService.GetSnapshots(item.Target);
-        item.BackupCount = snapshots.Count;
-        item.LastBackupAt = snapshots.Count > 0 ? snapshots[0].CreatedAt : null;
+        var backups = _backupService.GetSnapshots(item.Target, SnapshotKind.Backup);
+        var manual = _backupService.GetSnapshots(item.Target, SnapshotKind.Manual);
+        item.BackupCount = backups.Count;
+        item.ManualCount = manual.Count;
+        item.SafetyCount = _backupService.GetSnapshots(item.Target, SnapshotKind.Safety).Count;
+
+        // "Last backup" reflects the most recent protective snapshot the user initiated or that
+        // monitoring created - i.e. the newest of an automatic backup or a manual snapshot.
+        item.LastBackupAt = MostRecent(
+            backups.Count > 0 ? backups[0].CreatedAt : null,
+            manual.Count > 0 ? manual[0].CreatedAt : null);
+    }
+
+    private static DateTimeOffset? MostRecent(DateTimeOffset? a, DateTimeOffset? b)
+    {
+        if (a is null) return b;
+        if (b is null) return a;
+        return a > b ? a : b;
+    }
+
+    private void OpenFolder(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return;
+
+        try
+        {
+            if (!Directory.Exists(path))
+            {
+                _logger.Warn($"Cannot open folder; it does not exist: '{path}'.");
+                return;
+            }
+
+            Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Failed to open folder '{path}'.", ex);
+        }
     }
 
     private static (IBackupService, IBackupMonitor, IAppLogger) BuildDefaultServices()

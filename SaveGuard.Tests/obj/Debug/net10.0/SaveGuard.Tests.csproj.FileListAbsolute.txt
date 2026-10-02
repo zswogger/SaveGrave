@@ -100,3 +100,4 @@ E:\repos\SideProjects\GameSaveGuard\SaveGuard.Tests\obj\Debug\net10.0\refint\Sav
 E:\repos\SideProjects\GameSaveGuard\SaveGuard.Tests\obj\Debug\net10.0\SaveGuard.Tests.pdb
 E:\repos\SideProjects\GameSaveGuard\SaveGuard.Tests\obj\Debug\net10.0\SaveGuard.Tests.genruntimeconfig.cache
 E:\repos\SideProjects\GameSaveGuard\SaveGuard.Tests\obj\Debug\net10.0\ref\SaveGuard.Tests.dll
+E:\repos\SideProjects\GameSaveGuard\SaveGuard.Tests\obj\Debug\net10.0\SaveGuard.Tests.sourcelink.json

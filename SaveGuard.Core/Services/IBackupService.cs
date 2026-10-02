@@ -16,6 +16,13 @@ public interface IBackupService
     Task<Snapshot?> BackupAsync(BackupTarget target, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Creates a manual, on-demand snapshot of the target's save directory, then prunes old manual
+    /// snapshots down to <see cref="BackupTarget.MaxBackups"/>. Returns the created snapshot, or null
+    /// if another backup for this target was already running (the request is coalesced).
+    /// </summary>
+    Task<Snapshot?> TakeManualSnapshotAsync(BackupTarget target, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Restores the given snapshot onto the target's save directory. Before replacing anything,
     /// creates a safety snapshot of the current save directory if it exists and contains data.
     /// </summary>

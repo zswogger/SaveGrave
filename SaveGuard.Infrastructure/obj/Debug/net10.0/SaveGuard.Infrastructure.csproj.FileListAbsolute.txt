@@ -13,3 +13,4 @@ E:\repos\SideProjects\GameSaveGuard\SaveGuard.Infrastructure\obj\Debug\net10.0\S
 E:\repos\SideProjects\GameSaveGuard\SaveGuard.Infrastructure\obj\Debug\net10.0\refint\SaveGuard.Infrastructure.dll
 E:\repos\SideProjects\GameSaveGuard\SaveGuard.Infrastructure\obj\Debug\net10.0\SaveGuard.Infrastructure.pdb
 E:\repos\SideProjects\GameSaveGuard\SaveGuard.Infrastructure\obj\Debug\net10.0\ref\SaveGuard.Infrastructure.dll
+E:\repos\SideProjects\GameSaveGuard\SaveGuard.Infrastructure\obj\Debug\net10.0\SaveGuard.Infrastructure.sourcelink.json
