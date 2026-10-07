@@ -11,13 +11,13 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceInclude Source="avares://SaveGuard.Desktop/Styles/Colors.axaml" />
+                <ResourceInclude Source="avares://SaveGrave/Styles/Colors.axaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
 
     <Application.Styles>
         <FluentTheme />
-        <StyleInclude Source="avares://SaveGuard.Desktop/Styles/Controls.axaml" />
+        <StyleInclude Source="avares://SaveGrave/Styles/Controls.axaml" />
     </Application.Styles>
 </Application>

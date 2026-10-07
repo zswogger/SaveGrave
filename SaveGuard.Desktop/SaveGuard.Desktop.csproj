@@ -6,6 +6,24 @@
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\save-grave-logo.ico</ApplicationIcon>
+
+    <!-- Product / release metadata (shown in the exe's file properties). -->
+    <AssemblyName>SaveGrave</AssemblyName>
+    <Product>Save Grave</Product>
+    <Company>Save Grave</Company>
+    <Version>1.0.0</Version>
+    <InformationalVersion>1.0.0</InformationalVersion>
+
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <!-- Single-file self-contained publishing. Only engages when a runtime identifier is given
+       (i.e. during `dotnet publish -r <rid>`), so plain build/test is unaffected. -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
 
   <ItemGroup>

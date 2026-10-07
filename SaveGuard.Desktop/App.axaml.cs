@@ -106,7 +106,7 @@ public partial class App : Application
 
         try
         {
-            _trayIcon.Icon = new WindowIcon(AssetLoader.Open(new Uri("avares://SaveGuard.Desktop/Assets/save-grave-logo.ico")));
+            _trayIcon.Icon = new WindowIcon(AssetLoader.Open(new Uri("avares://SaveGrave/Assets/save-grave-logo.ico")));
         }
         catch
         {
