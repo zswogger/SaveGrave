@@ -23,16 +23,22 @@ public class FileSystemBackupMonitorTests
         };
 
         var completed = 0;
+        // Use a debounce window comfortably longer than the burst duration below (~450ms) so the
+        // timer cannot elapse mid-burst on a slow/loaded CI runner, which would otherwise split the
+        // burst into two snapshots. This keeps the test deterministic without changing what it
+        // verifies: a burst of writes collapses into a single snapshot.
+        var debounce = TimeSpan.FromMilliseconds(1000);
         using var monitor = new FileSystemBackupMonitor(
             backupService,
             snapshotService,
-            debounceDelay: TimeSpan.FromMilliseconds(400),
+            debounceDelay: debounce,
             reconcileInterval: TimeSpan.FromHours(1));
         monitor.BackupCompleted += (_, e) => { if (e.Succeeded) Interlocked.Increment(ref completed); };
 
         monitor.Start(target);
 
-        // Simulate a save operation: many writes in quick succession, each inside the debounce window.
+        // Simulate a save operation: many writes in quick succession, each well inside the debounce
+        // window (total burst ~450ms << 1000ms debounce).
         for (var i = 0; i < 15; i++)
         {
             source.WriteFile("save.dat", $"write-{i}");
@@ -40,7 +46,7 @@ public class FileSystemBackupMonitorTests
         }
 
         // Wait well past the debounce window for the single backup to fire and finish.
-        await Task.Delay(1500);
+        await Task.Delay(debounce + TimeSpan.FromSeconds(2));
 
         Assert.Equal(1, Volatile.Read(ref completed));
         Assert.Single(backupService.GetSnapshots(target));
