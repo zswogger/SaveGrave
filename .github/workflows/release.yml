@@ -29,9 +29,11 @@ jobs:
         run: dotnet test SaveGrave.slnx -c Release --no-restore
 
       - name: Publish (win-x64, self-contained single file)
+        # No --no-restore here: adding the win-x64 RID needs a runtime-specific restore, which the
+        # earlier RID-less `dotnet restore` did not produce.
         run: >
           dotnet publish SaveGrave.Desktop/SaveGrave.Desktop.csproj
-          -c Release -r win-x64 --no-restore
+          -c Release -r win-x64
           -o publish/win-x64
 
       - name: Package
