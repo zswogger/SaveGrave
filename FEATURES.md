@@ -5,8 +5,8 @@ backups of game save directories so you can restore an earlier save if your curr
 deleted, corrupted, or otherwise lost.
 
 - **Platform:** .NET 10, Avalonia UI (desktop), xUnit tests
-- **Architecture:** `SaveGuard.Core` (domain + interfaces), `SaveGuard.Infrastructure`
-  (filesystem implementations), `SaveGuard.Desktop` (Avalonia UI), `SaveGuard.Tests`
+- **Architecture:** `SaveGrave.Core` (domain + interfaces), `SaveGrave.Infrastructure`
+  (filesystem implementations), `SaveGrave.Desktop` (Avalonia UI), `SaveGrave.Tests`
 - **Data integrity first:** the app never modifies the active save during normal monitoring; it
   only writes to the save directory when you explicitly restore.
 
@@ -114,7 +114,7 @@ Each category lives in its own location under the backup folder and is retained 
 
 ## User interface
 
-A dark, minimal desktop UI themed from the "Inklog" color system (warm copper accent on a
+A dark, minimal desktop UI themed (warm copper accent on a
 charcoal palette), built on a centralized set of reusable Avalonia styles (colors, typography,
 buttons, cards, inputs, status badges, dialogs, separators, timeline).
 
@@ -183,20 +183,19 @@ Reusable status badge with semantic colors:
 
 ### Configuration
 - Protected games are persisted as a JSON file in a per-user application data directory
-  (`%APPDATA%\GameSaveGuard\targets.json` on Windows; `~/.config/GameSaveGuard/...` on
-  Linux/macOS), not beside the executable. The on-disk folder name intentionally keeps the
-  original `GameSaveGuard` app id so existing data survives the rebrand without migration.
+  (`%APPDATA%\SaveGrave\targets.json` on Windows; `~/.config/SaveGrave/...` on
+  Linux/macOS), not beside the executable.ion.
 - Writes are atomic (temp file then move) so a crash mid-write can't corrupt the configuration.
 - Configuration survives application restarts. App-wide settings persist to a sibling
   `settings.json`.
 
 ### Logging
-- A file logger writes dated logs to `<app data>/GameSaveGuard/logs/saveguard-YYYY-MM-DD.log`.
+- A file logger writes dated logs to `<app data>/SaveGrave/logs/SaveGrave-YYYY-MM-DD.log`.
 - Backup, manual-snapshot, and restore operations log start/completion, and failures log the full
   exception for diagnosis. Logging never throws into the application.
 
 ### Settings
-- App-wide preferences persist to `<app data>/GameSaveGuard/settings.json` (atomic write; corrupt
+- App-wide preferences persist to `<app data>/SaveGrave/settings.json` (atomic write; corrupt
   or missing settings fall back to defaults).
 - A **Settings** dialog (gear in the header) exposes the toggles below; changes apply and save
   immediately.
@@ -260,5 +259,5 @@ including:
 ## Running the app
 
 ```powershell
-dotnet run --project SaveGuard.Desktop/SaveGuard.Desktop.csproj
+dotnet run --project SaveGrave.Desktop/SaveGrave.Desktop.csproj
 ```

@@ -1,0 +1,53 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Raw palette -->
+    <Color x:Key="InkBg">#0F1115</Color>
+    <Color x:Key="InkSurface">#1B1F24</Color>
+    <Color x:Key="InkCanvas">#242932</Color>
+    <Color x:Key="InkCanvasHover">#2E343D</Color>
+    <Color x:Key="InkMuted">#5A616B</Color>
+    <Color x:Key="InkSecondaryText">#AEB4BD</Color>
+    <Color x:Key="InkText">#F5F7FA</Color>
+    <Color x:Key="InkAccent">#C77D4A</Color>
+    <Color x:Key="InkAccentHover">#D68F58</Color>
+    <Color x:Key="InkAccentPressed">#B06A3B</Color>
+    <Color x:Key="InkSuccess">#6FA981</Color>
+    <Color x:Key="InkWarning">#D9A441</Color>
+    <Color x:Key="InkDanger">#E07A72</Color>
+    <Color x:Key="InkDangerSurface">#3B1F24</Color>
+
+    <!-- Semantic brushes. -->
+    <SolidColorBrush x:Key="AppBackgroundBrush" Color="{StaticResource InkBg}" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource InkSurface}" />
+    <SolidColorBrush x:Key="ElevatedSurfaceBrush" Color="{StaticResource InkCanvas}" />
+    <SolidColorBrush x:Key="HoverSurfaceBrush" Color="{StaticResource InkCanvasHover}" />
+    <SolidColorBrush x:Key="InputBackgroundBrush" Color="{StaticResource InkCanvas}" />
+
+    <SolidColorBrush x:Key="PrimaryTextBrush" Color="{StaticResource InkText}" />
+    <SolidColorBrush x:Key="SecondaryTextBrush" Color="{StaticResource InkSecondaryText}" />
+    <SolidColorBrush x:Key="MutedTextBrush" Color="{StaticResource InkMuted}" />
+
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource InkAccent}" />
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="{StaticResource InkAccentHover}" />
+    <SolidColorBrush x:Key="AccentPressedBrush" Color="{StaticResource InkAccentPressed}" />
+    <!-- Accent used as a tint behind content (hover / soft fills). -->
+    <SolidColorBrush x:Key="AccentSoftBrush" Color="{StaticResource InkAccent}" Opacity="0.12" />
+
+    <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource InkSuccess}" />
+    <SolidColorBrush x:Key="SuccessSoftBrush" Color="{StaticResource InkSuccess}" Opacity="0.14" />
+    <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource InkWarning}" />
+    <SolidColorBrush x:Key="WarningSoftBrush" Color="{StaticResource InkWarning}" Opacity="0.14" />
+    <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource InkDanger}" />
+    <SolidColorBrush x:Key="DangerSoftBrush" Color="{StaticResource InkDanger}" Opacity="0.14" />
+    <SolidColorBrush x:Key="DangerSurfaceBrush" Color="{StaticResource InkDangerSurface}" />
+
+    <!-- Borders/dividers: Inklog uses ink-muted at ~20% opacity. -->
+    <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource InkMuted}" Opacity="0.22" />
+    <SolidColorBrush x:Key="CardBorderBrush" Color="{StaticResource InkMuted}" Opacity="0.18" />
+    <SolidColorBrush x:Key="SeparatorBrush" Color="{StaticResource InkMuted}" Opacity="0.18" />
+
+    <!-- Scrim behind modal dialogs. -->
+    <SolidColorBrush x:Key="OverlayScrimBrush" Color="#000000" Opacity="0.55" />
+
+</ResourceDictionary>

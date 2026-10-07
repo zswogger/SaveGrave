@@ -1,0 +1,58 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SaveGrave.Desktop.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="480"
+             x:Class="SaveGrave.Desktop.Views.AddGameView"
+             x:DataType="vm:AddGameViewModel"
+             Width="480">
+
+    <Border Classes="dialogSurface" Padding="26,24">
+        <StackPanel Spacing="18">
+            <StackPanel Spacing="5">
+                <TextBlock Classes="h2" Text="Add Game" />
+                <TextBlock Classes="meta" Text="Protect a save folder with automatic recovery points." />
+            </StackPanel>
+
+            <StackPanel Spacing="7">
+                <TextBlock Classes="label" Text="Game name" />
+                <TextBox Text="{Binding GameName}" PlaceholderText="Display Name" />
+            </StackPanel>
+
+            <StackPanel Spacing="7">
+                <TextBlock Classes="label" Text="Save folder" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBox Grid.Column="0" Text="{Binding SaveFolder}" IsReadOnly="True"
+                             PlaceholderText="Select the game's save folder" />
+                    <Button Grid.Column="1" Content="Browse" Margin="8,0,0,0" Command="{Binding BrowseSaveFolderCommand}" />
+                </Grid>
+            </StackPanel>
+
+            <StackPanel Spacing="7">
+                <TextBlock Classes="label" Text="Backup location" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBox Grid.Column="0" Text="{Binding BackupLocation}" IsReadOnly="True"
+                             PlaceholderText="Where recovery points are stored" />
+                    <Button Grid.Column="1" Content="Browse" Margin="8,0,0,0" Command="{Binding BrowseBackupLocationCommand}" />
+                </Grid>
+            </StackPanel>
+
+            <StackPanel Spacing="7">
+                <TextBlock Classes="label" Text="Recovery points to keep" />
+                <NumericUpDown Value="{Binding BackupsToKeep}" Minimum="1" Maximum="500" Increment="1"
+                               FormatString="0" HorizontalAlignment="Left" Width="150" />
+                <TextBlock Classes="meta" Text="Older recovery points are automatically removed." />
+            </StackPanel>
+
+            <TextBlock Classes="meta" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap"
+                       Text="{Binding ErrorMessage}"
+                       IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,4,0,0">
+                <Button Content="Cancel" Click="OnCancel" />
+                <Button Classes="primary" Content="Protect Game" Click="OnProtect" IsDefault="True" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

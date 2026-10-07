@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SaveGrave.Core/SaveGrave.Core.csproj" />
+  <Project Path="SaveGrave.Desktop/SaveGrave.Desktop.csproj" />
+  <Project Path="SaveGrave.Infrastructure/SaveGrave.Infrastructure.csproj" />
+  <Project Path="SaveGrave.Tests/SaveGrave.Tests.csproj" />
+</Solution>

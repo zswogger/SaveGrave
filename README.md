@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="SaveGuard.Desktop/Assets/save-grave-logo.png" width="120" alt="Save Grave logo" />
+  <img src="SaveGrave.Desktop/Assets/save-grave-logo.png" width="120" alt="Save Grave logo" />
   <h1>Save Grave</h1>
   <p><em>Automatic, versioned backups for your game saves.</em></p>
 </div>
@@ -40,15 +40,15 @@ a safety snapshot of the current save first. No accounts, no cloud, no telemetry
 Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download).
 
 ```bash
-dotnet build GameSaveGuard.slnx            # build everything
-dotnet test GameSaveGuard.slnx             # run the tests
-dotnet run --project SaveGuard.Desktop     # run locally
+dotnet build SaveGrave.slnx            # build everything
+dotnet test SaveGrave.slnx             # run the tests
+dotnet run --project SaveGrave.Desktop     # run locally
 ```
 
 To produce a release build like the one on the Releases page:
 
 ```bash
-dotnet publish SaveGuard.Desktop/SaveGuard.Desktop.csproj -c Release -r win-x64 -o publish/win-x64
+dotnet publish SaveGrave.Desktop/SaveGrave.Desktop.csproj -c Release -r win-x64 -o publish/win-x64
 ```
 
 ## License
