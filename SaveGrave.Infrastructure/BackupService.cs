@@ -39,6 +39,12 @@ public sealed class BackupService : IBackupService
 
             ApplyRetention(target, SnapshotKind.Backup);
             _logger.Info($"Backup completed for '{target.DisplayName}': snapshot '{snapshot.Path}' ({snapshot.SizeBytes} bytes).");
+            if (snapshot.SkippedFiles.Count > 0)
+            {
+                _logger.Warn($"Backup for '{target.DisplayName}' skipped {snapshot.SkippedFiles.Count} locked file(s) " +
+                             $"(still in use by another process): {string.Join(", ", snapshot.SkippedFiles)}. " +
+                             "These will be captured on a later backup once the lock is released.");
+            }
             return snapshot;
         }
         catch (Exception ex)

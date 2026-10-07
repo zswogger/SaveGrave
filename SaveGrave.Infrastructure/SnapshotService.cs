@@ -31,12 +31,13 @@ public sealed class SnapshotService : ISnapshotService
         if (Directory.Exists(stagingPath))
             Directory.Delete(stagingPath, recursive: true);
 
+        IReadOnlyList<string> skipped;
         try
         {
             // Guard against a misconfigured backup location that lives inside the save directory:
             // never descend into the backup location, or a snapshot would copy its own output
             // and recurse without end.
-            await CopyDirectoryAsync(sourcePath, stagingPath, backupPath, cancellationToken).ConfigureAwait(false);
+            skipped = await CopyDirectoryAsync(sourcePath, stagingPath, backupPath, cancellationToken).ConfigureAwait(false);
 
             // The copy fully succeeded; promote the staging directory to its final name. Only now
             // does the snapshot become visible and therefore "successful".
@@ -54,6 +55,7 @@ public sealed class SnapshotService : ISnapshotService
             Path = finalPath,
             CreatedAt = createdAt,
             SizeBytes = GetDirectorySize(finalPath),
+            SkippedFiles = skipped,
         };
     }
 
@@ -198,7 +200,12 @@ public sealed class SnapshotService : ISnapshotService
         return false;
     }
 
-    private static async Task CopyDirectoryAsync(string sourceDir, string destinationDir, string? excludeRoot, CancellationToken cancellationToken)
+    /// <summary>
+    /// Copies a directory tree. Files that another process holds under an exclusive lock (e.g. a
+    /// running game's open log file) are skipped rather than failing the whole snapshot; their
+    /// relative paths are returned so the caller can report them. All other files are copied.
+    /// </summary>
+    private static async Task<IReadOnlyList<string>> CopyDirectoryAsync(string sourceDir, string destinationDir, string? excludeRoot, CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(destinationDir);
 
@@ -211,6 +218,7 @@ public sealed class SnapshotService : ISnapshotService
             Directory.CreateDirectory(Path.Combine(destinationDir, relative));
         }
 
+        var skipped = new List<string>();
         foreach (var file in Directory.EnumerateFiles(sourceDir, "*", SearchOption.AllDirectories))
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -219,8 +227,24 @@ public sealed class SnapshotService : ISnapshotService
             var relative = Path.GetRelativePath(sourceDir, file);
             var destFile = Path.Combine(destinationDir, relative);
             Directory.CreateDirectory(Path.GetDirectoryName(destFile)!);
-            await CopyFileAsync(file, destFile, cancellationToken).ConfigureAwait(false);
+
+            try
+            {
+                await CopyFileAsync(file, destFile, cancellationToken).ConfigureAwait(false);
+            }
+            catch (IOException)
+            {
+                // The file is exclusively locked by another process right now. Skip it so the rest
+                // of the save still gets backed up; reconciliation will retry once the lock clears.
+                skipped.Add(relative);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                skipped.Add(relative);
+            }
         }
+
+        return skipped;
     }
 
     private static bool IsExcluded(string path, string? excludeRoot)
@@ -229,7 +253,10 @@ public sealed class SnapshotService : ISnapshotService
     private static async Task CopyFileAsync(string sourceFile, string destFile, CancellationToken cancellationToken)
     {
         const int bufferSize = 81920;
-        await using var source = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, useAsync: true);
+        // Share read/write/delete on the source so files another process has open for writing
+        // (common for live game saves and logs) can still be read.
+        await using var source = new FileStream(sourceFile, FileMode.Open, FileAccess.Read,
+            FileShare.ReadWrite | FileShare.Delete, bufferSize, useAsync: true);
         await using var destination = new FileStream(destFile, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize, useAsync: true);
         await source.CopyToAsync(destination, bufferSize, cancellationToken).ConfigureAwait(false);
     }

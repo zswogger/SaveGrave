@@ -13,4 +13,10 @@ public sealed class Snapshot
     public DateTimeOffset CreatedAt { get; init; }
 
     public long SizeBytes { get; init; }
+
+    /// <summary>
+    /// Relative paths of files that were locked by another process and skipped during this
+    /// snapshot (e.g. a running game's open log file). Empty for a fully complete snapshot.
+    /// </summary>
+    public IReadOnlyList<string> SkippedFiles { get; init; } = [];
 }
