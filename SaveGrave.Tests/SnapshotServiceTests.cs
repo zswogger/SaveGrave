@@ -91,6 +91,71 @@ public class SnapshotServiceTests
     }
 
     [Fact]
+    public async Task CreateSnapshot_IgnoresLogFiles()
+    {
+        using var source = new TempDirectory();
+        using var backup = new TempDirectory();
+        source.WriteFile("save.dat", "save");
+        source.WriteFile(System.IO.Path.Combine("Logs", "game.log"), "noise");
+        source.WriteFile("latest.LOG", "noise");
+
+        var service = new SnapshotService();
+        var snapshot = await service.CreateSnapshotAsync(Guid.NewGuid(), source.Path, backup.Path);
+
+        Assert.True(File.Exists(System.IO.Path.Combine(snapshot.Path, "save.dat")));
+        Assert.False(File.Exists(System.IO.Path.Combine(snapshot.Path, "Logs", "game.log")));
+        Assert.False(File.Exists(System.IO.Path.Combine(snapshot.Path, "latest.LOG")));
+
+        // Log files must not count toward change detection, or the target would look perpetually
+        // dirty and trigger endless backups.
+        Assert.False(service.DiffersFromSnapshot(source.Path, snapshot));
+    }
+
+    [Fact]
+    public async Task CreateSnapshot_SkipsLockedFile_ButBacksUpTheRest()
+    {
+        using var source = new TempDirectory();
+        using var backup = new TempDirectory();
+        source.WriteFile("save.dat", "the real save");
+        source.WriteFile(System.IO.Path.Combine("profiles", "player.sav"), "profile data");
+
+        var service = new SnapshotService();
+        var lockedPath = System.IO.Path.Combine(source.Path, "profiles", "player.sav");
+
+        // Hold a (non-log) save file under an exclusive lock, as a running game might briefly.
+        using (var _ = new FileStream(lockedPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+        {
+            var snapshot = await service.CreateSnapshotAsync(Guid.NewGuid(), source.Path, backup.Path);
+
+            // The snapshot still succeeds and contains the other save file...
+            Assert.Equal("the real save", File.ReadAllText(System.IO.Path.Combine(snapshot.Path, "save.dat")));
+            // ...and the locked file is reported as skipped, not copied.
+            Assert.Contains(snapshot.SkippedFiles, p => p.Replace('\\', '/') == "profiles/player.sav");
+            Assert.False(File.Exists(System.IO.Path.Combine(snapshot.Path, "profiles", "player.sav")));
+        }
+    }
+
+    [Fact]
+    public async Task CreateSnapshot_CopiesFileOpenedForWritingByAnotherProcess()
+    {
+        using var source = new TempDirectory();
+        using var backup = new TempDirectory();
+        var openPath = System.IO.Path.Combine(source.Path, "save.dat");
+        File.WriteAllText(openPath, "live save data");
+
+        var service = new SnapshotService();
+
+        // Another process has the file open for writing but shares read access (common case).
+        using (var _ = new FileStream(openPath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
+        {
+            var snapshot = await service.CreateSnapshotAsync(Guid.NewGuid(), source.Path, backup.Path);
+
+            Assert.Empty(snapshot.SkippedFiles);
+            Assert.Equal("live save data", File.ReadAllText(System.IO.Path.Combine(snapshot.Path, "save.dat")));
+        }
+    }
+
+    [Fact]
     public async Task Restore_PreservesTheSaveDirectoryItself_NotJustContents()
     {
         using var source = new TempDirectory();

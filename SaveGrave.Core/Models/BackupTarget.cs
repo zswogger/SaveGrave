@@ -16,7 +16,7 @@ public sealed class BackupTarget
     public string BackupPath { get; set; } = string.Empty;
 
     /// <summary>Maximum number of successful snapshots to retain. Older snapshots beyond this are pruned.</summary>
-    public int MaxBackups { get; set; } = 20;
+    public int MaxBackups { get; set; } = 5;
 
     public bool IsEnabled { get; set; } = true;
 }

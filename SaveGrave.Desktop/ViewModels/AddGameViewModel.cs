@@ -23,7 +23,7 @@ public partial class AddGameViewModel : ViewModelBase
     public partial string BackupLocation { get; set; } = string.Empty;
 
     [ObservableProperty]
-    public partial int BackupsToKeep { get; set; } = 20;
+    public partial int BackupsToKeep { get; set; } = 5;
 
     [ObservableProperty]
     public partial string? ErrorMessage { get; set; }

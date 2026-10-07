@@ -222,7 +222,7 @@ public sealed class SnapshotService : ISnapshotService
         foreach (var file in Directory.EnumerateFiles(sourceDir, "*", SearchOption.AllDirectories))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (IsExcluded(file, excludeRoot))
+            if (IsExcluded(file, excludeRoot) || IsIgnoredFile(file))
                 continue;
             var relative = Path.GetRelativePath(sourceDir, file);
             var destFile = Path.Combine(destinationDir, relative);
@@ -250,6 +250,14 @@ public sealed class SnapshotService : ISnapshotService
     private static bool IsExcluded(string path, string? excludeRoot)
         => excludeRoot is not null && SaveGrave.Core.PathUtilities.IsSameOrInside(path, excludeRoot);
 
+    /// <summary>
+    /// Files Save Grave never backs up: log files aren't save data, are the most likely to be held
+    /// under an exclusive lock by a running game, and would otherwise keep a target perpetually
+    /// "dirty". This must stay in sync with the enumeration in <see cref="DiffersFromSnapshot"/>.
+    /// </summary>
+    private static bool IsIgnoredFile(string path)
+        => path.EndsWith(".log", StringComparison.OrdinalIgnoreCase);
+
     private static async Task CopyFileAsync(string sourceFile, string destFile, CancellationToken cancellationToken)
     {
         const int bufferSize = 81920;
@@ -266,6 +274,10 @@ public sealed class SnapshotService : ISnapshotService
         var map = new Dictionary<string, FileInfo>(StringComparer.OrdinalIgnoreCase);
         foreach (var file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
         {
+            // Ignored files (e.g. .log) are never backed up, so they must not count toward
+            // change detection either, or the target would look perpetually dirty.
+            if (IsIgnoredFile(file))
+                continue;
             var relative = Path.GetRelativePath(root, file);
             map[relative] = new FileInfo(file);
         }
